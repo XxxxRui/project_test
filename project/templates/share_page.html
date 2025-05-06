@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/share-page-css.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <a href="{{url_for('main.home')}}" class="logo-link">
+      <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
+           alt="Wellness Tracker Logo" class="logo">
+    </a>
+    <h1>Wellness Tracker</h1>
+    <div class="nav-buttons">
+      <a href="{{ url_for('main.home') }}">
+            <button>Log out</button>
+        </a>
+        <a href="{{ url_for('main.account') }}">
+            <button>Profile</button>
+        </a>
+        <a href="{{ url_for('main.faqs') }}">
+            <button>FAQ's</button>
+        </a>
+        <a href="{{ url_for('main.history') }}">
+            <button>History</button>
+        </a>
+    </div>
+  </header>
+
+  <main class="content">
+    <h2>Share Your Data</h2>
+    
+    <div class="share-container">
+      <!-- Left section for content selection -->
+      <div class="share-selection">
+        <h3>Select What to Share</h3>
+        
+        <div class="content-tabs">
+          <button class="tab-button active" onclick="switchTab('activities')">Activities</button>
+          <button class="tab-button" onclick="switchTab('achievements')">Achievements</button>
+          <button class="tab-button" onclick="switchTab('stats')">Statistics</button>
+        </div>
+        
+        <div id="activities" class="tab-content active">
+          <div class="scroll-container">
+            <!-- Activity items to share -->
+            <div class="share-item" onclick="selectItem('activity', 1)">
+              <div class="item-icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/384/384276.png" alt="Running">
+              </div>
+              <div class="item-details">
+                <h4>Morning Run</h4>
+                <p>5.2 km • 45 min • 320 calories</p>
+                <p class="item-date">April 22, 2025</p>
+              </div>
+            </div>
+            
+            <div class="share-item" onclick="selectItem('activity', 2)">
+              <div class="item-icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/2972/2972185.png" alt="Cycling">
+              </div>
+              <div class="item-details">
+                <h4>Evening Ride</h4>
+                <p>15 km • 60 min • 450 calories</p>
+                <p class="item-date">April 20, 2025</p>
+              </div>
+            </div>
+            
+            <div class="share-item" onclick="selectItem('activity', 3)">
+              <div class="item-icon">
+                <img src="../static/image/swimming.png" alt="Swimming">
+              </div>
+              <div class="item-details">
+                <h4>Swimming</h4>
+                <p>1.5 km • 30 min • 250 calories</p>
+                <p class="item-date">April 18, 2025</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="achievements" class="tab-content">
+          <div class="scroll-container">
+            <!-- Achievement items to share -->
+            <div class="share-item" onclick="selectItem('achievement', 1)">
+              <div class="item-icon achievement">
+                <img src="https://cdn-icons-png.flaticon.com/512/2583/2583344.png" alt="First Run">
+              </div>
+              <div class="item-details">
+                <h4>First Run</h4>
+                <p>Completed your first run</p>
+                <p class="item-date">April 6, 2025</p>
+              </div>
+            </div>
+            
+            <div class="share-item" onclick="selectItem('achievement', 2)">
+              <div class="item-icon achievement">
+                <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Marathon Master">
+              </div>
+              <div class="item-details">
+                <h4>Marathon Master</h4>
+                <p>Ran over 42km in total</p>
+                <p class="item-date">April 16, 2025</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="stats" class="tab-content">
+          <div class="scroll-container">
+            <!-- Stats to share -->
+            <div class="share-item" onclick="selectItem('stats', 'weekly')">
+              <div class="item-icon stats">
+                <img src="../static/image/scheme.png" alt="Weekly Stats">
+              </div>
+              <div class="item-details">
+                <h4>Weekly Activity Summary</h4>
+                <p>April 15 - April 22, 2025</p>
+              </div>
+            </div>
+            
+            <div class="share-item" onclick="selectItem('stats', 'monthly')">
+              <div class="item-icon stats">
+                <img src="https://cdn-icons-png.flaticon.com/512/1170/1170577.png" alt="Monthly Stats">
+              </div>
+              <div class="item-details">
+                <h4>Monthly Progress</h4>
+                <p>April 2025</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right section for sharing options -->
+      <div class="share-options">
+        <h3>Share With</h3>
+        
+        <div class="search-box">
+          <input type="text" placeholder="Search users..." id="user-search">
+          <button class="search-button">Search</button>
+        </div>
+        
+        <div class="user-list scroll-container">
+          <div class="user-item" onclick="selectUser(1)">
+            <img src="https://i.pravatar.cc/50?img=1" alt="User" class="user-avatar">
+            <span class="user-name">user2</span>
+            <span class="user-selected"></span>
+          </div>
+          
+          <div class="user-item" onclick="selectUser(2)">
+            <img src="https://i.pravatar.cc/50?img=2" alt="User" class="user-avatar">
+            <span class="user-name">user3</span>
+            <span class="user-selected"></span>
+          </div>
+          
+          <div class="user-item" onclick="selectUser(3)">
+            <img src="https://i.pravatar.cc/50?img=3" alt="User" class="user-avatar">
+            <span class="user-name">user4</span>
+            <span class="user-selected"></span>
+          </div>
+          
+          <div class="user-item" onclick="selectUser(4)">
+            <img src="https://i.pravatar.cc/50?img=4" alt="User" class="user-avatar">
+            <span class="user-name">user5</span>
+            <span class="user-selected"></span>
+          </div>
+        </div>
+        
+        <div class="message-box">
+          <label for="share-message">Message (optional):</label>
+          <textarea id="share-message" placeholder="Add a message with your share..."></textarea>
+        </div>
+        
+        <button class="share-button" id="share-now" onclick="shareNow()">Share Now</button>
+      </div>
+    </div>
+    
+    <!-- Shared content section -->
+    <div class="shared-with-me">
+      <h3>Shared With Me</h3>
+      <div class="scroll-container shared-items">
+        <div class="shared-item">
+          <div class="shared-header">
+            <img src="https://i.pravatar.cc/50?img=2" alt="User" class="user-avatar">
+            <div class="shared-info">
+              <h4>user2 shared with you</h4>
+              <p class="item-date">April 21, 2025</p>
+            </div>
+          </div>
+          <div class="shared-content">
+            <div class="shared-item-icon">
+              <img src="https://cdn-icons-png.flaticon.com/512/3198/3198336.png" alt="Hiking">
+            </div>
+            <div class="shared-item-details">
+              <h4>Weekend Hike</h4>
+              <p>8.5 km • 120 min • 650 calories</p>
+              <p class="shared-message">"Great weekend hike"</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="shared-item">
+          <div class="shared-header">
+            <img src="https://i.pravatar.cc/50?img=3" alt="User" class="user-avatar">
+            <div class="shared-info">
+              <h4>user3 shared with you</h4>
+              <p class="item-date">April 19, 2025</p>
+            </div>
+          </div>
+          <div class="shared-content">
+            <div class="shared-item-icon achievement">
+              <img src="https://cdn-icons-png.flaticon.com/512/9404/9404806.png" alt="Cycling Pro">
+            </div>
+            <div class="shared-item-details">
+              <h4>Cycling Pro</h4>
+              <p>Cycled over 100km in total</p>
+              <p class="shared-message">"Finally reached this milestone!"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Success notification -->
+  <div id="success-notification" class="notification">
+    <div class="notification-content">
+      <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="Success">
+      <h3>Shared Successfully!</h3>
+      <p>Your content has been shared with selected users.</p>
+      <button onclick="closeNotification()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // Function to switch tabs
+    function switchTab(tabName) {
+      // Hide all tab contents
+      const tabContents = document.getElementsByClassName('tab-content');
+      for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove('active');
+      }
+      
+      // Remove active class from all tab buttons
+      const tabButtons = document.getElementsByClassName('tab-button');
+      for (let i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].classList.remove('active');
+      }
+      
+      // Show selected tab content and make button active
+      document.getElementById(tabName).classList.add('active');
+      // Find the clicked button and add active class
+      const buttons = document.querySelectorAll('.tab-button');
+      for (let button of buttons) {
+        if (button.textContent.toLowerCase().includes(tabName.toLowerCase())) {
+          button.classList.add('active');
+        }
+      }
+    }
+    
+    // Variables to track selection
+    let selectedItem = null;
+    let selectedUsers = [];
+    
+    // Function to select an item to share
+    function selectItem(type, id) {
+      // Remove selected class from all items
+      const items = document.getElementsByClassName('share-item');
+      for (let i = 0; i < items.length; i++) {
+        items[i].classList.remove('selected');
+      }
+      
+      // Find the clicked item and add selected class
+      const selected = event.currentTarget;
+      selected.classList.add('selected');
+      
+      // Store selection info
+      selectedItem = { type: type, id: id };
+      
+      // Enable share button if at least one user is selected
+      updateShareButton();
+    }
+    
+    // Function to select a user
+    function selectUser(userId) {
+      const userElement = event.currentTarget;
+      
+      // Toggle selection
+      if (selectedUsers.includes(userId)) {
+        // Remove from selected users
+        selectedUsers = selectedUsers.filter(id => id !== userId);
+        userElement.classList.remove('selected');
+      } else {
+        // Add to selected users
+        selectedUsers.push(userId);
+        userElement.classList.add('selected');
+      }
+      
+      // Update the checkmark
+      const checkmark = userElement.querySelector('.user-selected');
+      if (selectedUsers.includes(userId)) {
+        checkmark.innerHTML = '✓';
+      } else {
+        checkmark.innerHTML = '';
+      }
+      
+      // Enable share button if an item is selected
+      updateShareButton();
+    }
+    
+    // Function to update share button state
+    function updateShareButton() {
+      const shareButton = document.getElementById('share-now');
+      if (selectedItem && selectedUsers.length > 0) {
+        shareButton.disabled = false;
+        shareButton.classList.add('active');
+      } else {
+        shareButton.disabled = true;
+        shareButton.classList.remove('active');
+      }
+    }
+    
+    // Function to share content
+    function shareNow() {
+      if (selectedItem && selectedUsers.length > 0) {
+        // In a real app, this would send data to the server
+        // For demo purposes, just show success notification
+        document.getElementById('success-notification').classList.add('show');
+        
+        // Reset selections after sharing
+        setTimeout(() => {
+          const items = document.getElementsByClassName('share-item');
+          for (let i = 0; i < items.length; i++) {
+            items[i].classList.remove('selected');
+          }
+          
+          const userItems = document.getElementsByClassName('user-item');
+          for (let i = 0; i < userItems.length; i++) {
+            userItems[i].classList.remove('selected');
+            userItems[i].querySelector('.user-selected').innerHTML = '';
+          }
+          
+          selectedItem = null;
+          selectedUsers = [];
+          
+          document.getElementById('share-message').value = '';
+          
+          updateShareButton();
+        }, 500);
+      }
+    }
+    
+    // Function to close notification
+    function closeNotification() {
+      document.getElementById('success-notification').classList.remove('show');
+    }
+    
+    // Initialize the share button state
+    document.addEventListener('DOMContentLoaded', () => {
+      updateShareButton();
+    });
+  </script>
+</body>
+</html>

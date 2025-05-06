@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_faqs.css') }}">
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('main.home') }}" class="logo-link">
+      <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
+           alt="Wellness Tracker Logo" class="logo">
+    </a>
+    <h1>Wellness Tracker</h1>
+    <div class="nav-buttons">
+        <a href="{{ url_for('main.account') }}">
+            <button>Account</button>
+        </a>
+        <a href="{{ url_for('main.faqs') }}">
+            <button>FAQ's</button>
+        </a>
+        <a href="{{ url_for('main.history') }}">
+            <button>History</button>
+        </a>
+    </div>
+  </header>
+  <form action="" method="post">
+        {{ form.age.label}}
+        {{ form.age}}
+        <br>
+        {{ form.height.label}}
+        {{ form.height}}
+        <br>
+        {{ form.weight.label}}
+        {{ form.weight}}
+        <br>
+        {{form.submit}}
+  </form>
+</body>
+</html>

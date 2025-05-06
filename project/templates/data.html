@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack - Fitness Tracking App</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        .card {
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+        }
+        
+        .activity-chart-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+        }
+        
+        .activity-chart-inner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        
+        .chart-legend-color {
+            width: 12px;
+            height: 12px;
+            margin-right: 0.5rem;
+            border-radius: 2px;
+        }
+        
+        .progress-bar {
+            height: 1rem;
+            border-radius: 1rem;
+            background-color: #e5e7eb;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 1rem;
+            background-color: #10b981;
+        }
+        
+        .activity-bar {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.25rem;
+        }
+        
+        .activity-bar-segment {
+            height: 5px;
+            margin-bottom: 1px;
+            border-radius: 1px;
+        }
+        
+        .time-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 0.25rem;
+        }
+        
+        .sidebar-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            margin-bottom: 0.25rem;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 0;
+            font-size: 0.75rem;
+        }
+        
+        .sidebar-item.active .sidebar-icon {
+            background-color: #10b981;
+        }
+        
+        .sidebar-item.active {
+            color: white;
+        }
+        
+        .sidebar-item:not(.active) {
+            color: #9ca3af;
+        }
+        
+        .period-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .period-button.active {
+            background-color: white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-button {
+            padding-bottom: 0.5rem;
+            font-size: 1.125rem;
+        }
+        
+        .tab-button.active {
+            font-weight: 700;
+            border-bottom: 2px solid black;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="flex flex-col min-h-screen">
+        <!-- Top Navigation Bar -->
+        <div class="bg-gray-800 text-white p-2 flex justify-between items-center">
+            <div class="flex items-center">
+                <button class="mr-2 text-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="flex space-x-4">
+                    <div class="nav-item active flex items-center px-3 py-2">
+                        <div class="mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        Dashboard
+                    </div>
+                    <div class="nav-item flex items-center px-3 py-2 text-gray-400">
+                        <div class="mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                        </div>
+                        Activities
+                    </div>
+                    <div class="nav-item flex items-center px-3 py-2 text-gray-400">
+                        <div class="mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                        </div>
+                        Home
+                    </div>
+                    <div class="nav-item flex items-center px-3 py-2 text-gray-400">
+                        <div class="mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        Profile
+                    </div>
+                </div>
+            </div>
+            <div class="text-white font-medium">
+                FitTrack
+            </div>
+        </div>
+
+        <div class="flex-1">
+            <!-- Activity Tabs -->
+            <div class="bg-white shadow-md p-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <button class="mr-4 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <div class="flex space-x-6 text-lg">
+                        <button class="tab-button active" data-tab="overview">All Activities</button>
+                        <button class="tab-button" data-tab="running">Running</button>
+                        <button class="tab-button" data-tab="cycling">Cycling</button>
+                        <button class="tab-button" data-tab="training">Training</button>
+                    </div>
+                </div>
+                <div class="text-green-500 font-medium">
+                    More Analysis &gt;
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="p-6">
+                <!-- Period Selector -->
+                <div class="bg-gray-200 inline-flex rounded-lg mb-6">
+                    <button class="period-button active" data-period="7days">Last 7 Days</button>
+                    <button class="period-button" data-period="30days">Last 30 Days</button>
+                    <button class="period-button" data-period="halfyear">Last 6 Months</button>
+                    <button class="period-button" data-period="year">Last Year</button>
+                </div>
+
+                <!-- Activity Overview Section -->
+                <h2 class="text-xl font-bold mb-4">Activity Overview</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Activity Summary -->
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium">Activity Summary</h3>
+                            <button class="text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <div class="text-center">
+                                <div class="text-gray-500 text-sm">Activities</div>
+                                <div class="text-3xl font-bold">60<span class="text-sm font-normal">times</span></div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-500 text-sm">Total Time</div>
+                                <div class="text-3xl font-bold">35:52:24</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-500 text-sm">Calories</div>
+                                <div class="text-3xl font-bold">16192<span class="text-sm font-normal">kcal</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="activity-chart-container" id="activity-chart-container">
+                                <canvas id="activity-chart"></canvas>
+                                <div class="activity-chart-inner"></div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="chart-legend-item">
+                                    <div class="chart-legend-color" style="background-color: #1ED9B4;"></div>
+                                    <div class="text-sm">Running 50%</div>
+                                </div>
+                                <div class="chart-legend-item">
+                                    <div class="chart-legend-color" style="background-color: #4285F4;"></div>
+                                    <div class="text-sm">Walking 10%</div>
+                                </div>
+                                <div class="chart-legend-item">
+                                    <div class="chart-legend-color" style="background-color: #A46AF9;"></div>
+                                    <div class="text-sm">Cycling 5%</div>
+                                </div>
+                                <div class="chart-legend-item">
+                                    <div class="chart-legend-color" style="background-color: #FF6B6B;"></div>
+                                    <div class="text-sm">Swimming 5%</div>
+                                </div>
+                                <div class="chart-legend-item">
+                                    <div class="chart-legend-color" style="background-color: #5F6368;"></div>
+                                    <div class="text-sm">Other 20%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Trend -->
+                    <div class="card col-span-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium">Activity Trend</h3>
+                            <button class="text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="flex space-x-6 mb-4">
+                            <button class="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">Frequency</button>
+                            <button class="px-3 py-1 text-sm">Duration</button>
+                            <button class="px-3 py-1 text-sm">Calories</button>
+                        </div>
+                        
+                        <div class="h-64">
+                            <canvas id="activity-trend-chart"></canvas>
+                        </div>
+                        
+                        <div class="flex justify-center space-x-6 mt-4">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 mr-1" style="background-color: #1ED9B4;"></div>
+                                <div class="text-xs">Running</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 mr-1" style="background-color: #4285F4;"></div>
+                                <div class="text-xs">Walking</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 mr-1" style="background-color: #A46AF9;"></div>
+                                <div class="text-xs">Cycling</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 mr-1" style="background-color: #FF6B6B;"></div>
+                                <div class="text-xs">Swimming</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 mr-1" style="background-color: #5F6368;"></div>
+                                <div class="text-xs">Other</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Distribution -->
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium">Activity Distribution</h3>
+                            <button class="text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="w-24 text-sm">Morning</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-bar-fill" style="width: 10%;"></div>
+                                </div>
+                                <div class="w-16 text-right text-sm">6% (10%)</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-24 text-sm">Daytime</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-bar-fill" style="width: 30%;"></div>
+                                </div>
+                                <div class="w-16 text-right text-sm">16% (30%)</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-24 text-sm">Morning</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-bar-fill" style="width: 10%;"></div>
+                                </div>
+                                <div class="w-16 text-right text-sm">6% (10%)</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-24 text-sm">Noon</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-bar-fill" style="width: 5%;"></div>
+                                </div>
+                                <div class="w-16 text-right text-sm">3% (5%)</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-24 text-sm">Afternoon</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-bar-fill" style="width: 5%;"></div>
+                                </div>
+                                <div class="w-16 text-right text-sm">3% (5%)</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-24 text-sm">Evening</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-bar-fill" style="width: 20%;"></div>
+                                </div>
+                                <div class="w-16 text-right text-sm">12% (20%)</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-24 text-sm">Night</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-bar-fill" style="width: 20%;"></div>
+                                </div>
+                                <div class="w-16 text-right text-sm">12% (20%)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Status Section -->
+                <h2 class="text-xl font-bold mb-4">Activity Status</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Fitness Level -->
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium">Fitness Level</h3>
+                            <button class="text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="text-6xl font-bold mb-3">74</div>
+                        <div class="text-sm text-gray-500 mb-6">Regular running and consistent training.</div>
+                        
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <div>Sleep Score</div>
+                                <div class="font-medium">76</div>
+                            </div>
+                            <div class="text-xs text-gray-500">General</div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <div>HRV Status</div>
+                                <div class="font-medium">-- <span class="text-xs">ms</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mental State -->
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium">Mental State</h3>
+                            <button class="text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="text-sm mb-6">Recent period is slightly, water and adequate rest are essential for recovery.</div>
+                        
+                        <div class="grid grid-cols-3 gap-4 mb-8">
+                            <div class="text-center">
+                                <div class="text-teal-500 text-2xl font-bold">61</div>
+                                <div class="text-xs">Stress (RMSSD)</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-blue-500 text-2xl font-bold">80</div>
+                                <div class="text-xs">Fatigue (CTL)</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-500 text-2xl font-bold">19</div>
+                                <div class="text-xs">Recovery (RRTSS)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="h-24">
+                            <canvas id="mental-state-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Training Load -->
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium">Training Load</h3>
+                            <button class="text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="text-xs text-gray-500 mb-1">Current Weekly Training Load</div>
+                        <div class="text-4xl font-bold mb-3">434</div>
+                        
+                        <div class="flex justify-between text-sm mb-6">
+                            <div>Aerobic TE: <span class="font-medium">791</span></div>
+                            <div>Anaerobic TE: <span class="font-medium">557</span></div>
+                        </div>
+                        
+                        <div class="h-40">
+                            <canvas id="training-load-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+            });
+        });
+
+        // Initialize period buttons
+        document.querySelectorAll('.period-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.period-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+            });
+        });
+
+        // Activity Donut Chart
+        const activityChart = new Chart(
+            document.getElementById('activity-chart'),
+            {
+                type: 'doughnut',
+                data: {
+                    labels: ['Running', 'Walking', 'Cycling', 'Swimming', 'Other'],
+                    datasets: [
+                        {
+                            data: [50, 10, 5, 5, 20],
+                            backgroundColor: [
+                                '#1ED9B4',
+                                '#4285F4',
+                                '#A46AF9',
+                                '#FF6B6B',
+                                '#5F6368'
+                            ],
+                            borderWidth: 0,
+                            cutout: '70%'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        );
+
+        // Activity Trend Chart
+        const days = ['3/1', '', '', '3/8', '', '', '3/15', '', '', '3/22', '', '3/31'];
+        const activityTrendChart = new Chart(
+            document.getElementById('activity-trend-chart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [
+                        {
+                            label: 'Running',
+                            data: [3, 2, 2.5, 2, 3, 1.5, 2.5, 3, 2, 1.5, 2.7, 3.2],
+                            backgroundColor: '#1ED9B4',
+                            stack: 'Stack 0',
+                        },
+                        {
+                            label: 'Walking',
+                            data: [2, 1.5, 2, 1.8, 2.2, 1.8, 2, 2.1, 1.9, 1.7, 2.2, 2.3],
+                            backgroundColor: '#4285F4',
+                            stack: 'Stack 0',
+                        },
+                        {
+                            label: 'Cycling',
+                            data: [1, 0.5, 0.7, 0.9, 1.2, 0.8, 1.1, 1.3, 0.9, 0.8, 1.1, 1.2],
+                            backgroundColor: '#A46AF9',
+                            stack: 'Stack 0',
+                        },
+                        {
+                            label: 'Swimming',
+                            data: [0.5, 0.3, 0.4, 0.6, 0.7, 0.4, 0.5, 0.6, 0.5, 0.4, 0.5, 0.6],
+                            backgroundColor: '#FF6B6B',
+                            stack: 'Stack 0',
+                        },
+                        {
+                            label: 'Other',
+                            data: [1.2, 1, 1.1, 1.3, 1.5, 1.2, 1.3, 1.4, 1.2, 1.1, 1.3, 1.4],
+                            backgroundColor: '#5F6368',
+                            stack: 'Stack 0',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        );
+
+        // Mental State Chart
+        const mentalStateChart = new Chart(
+            document.getElementById('mental-state-chart'),
+            {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Stress',
+                            data: [65, 78, 52, 68, 82, 75, 61],
+                            borderColor: '#1ED9B4',
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Fatigue',
+                            data: [72, 82, 65, 85, 65, 75, 80],
+                            borderColor: '#4285F4',
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 40,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 0
+                        }
+                    }
+                }
+            }
+        );
+
+        // Training Load Chart
+        const trainingLoadChart = new Chart(
+            document.getElementById('training-load-chart'),
+            {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+                    datasets: [
+                        {
+                            label: 'Training Load',
+                            data: [320, 335, 365, 390, 420, 450, 434, 410],
+                            borderColor: '#A46AF9',
+                            backgroundColor: 'rgba(164, 106, 249, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 300,
+                            max: 500
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: function(context) {
+                                // Highlight the second-to-last point
+                                return context.dataIndex === 6 ? 4 : 0;
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    </script>
+</body>
+</html>

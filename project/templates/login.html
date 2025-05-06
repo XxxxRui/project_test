@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack - Login/Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+<!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
+
+    
+<!-- Navigation Bar -->
+<nav class="navbar">
+
+    <div class="logo">
+        <a href="{{ url_for('main.home') }}" class="logo-link">
+        <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg"
+             alt="FitTrack">
+        </a>
+        <span>Wellness Tracker</span>
+    </div>
+    <div class="nav-links">
+        <a href="{{ url_for('main.faqs') }}">
+            FAQ's
+        </a>
+        <a href="{{ url_for('main.history') }}">
+            History
+        </a>
+    </div>
+</nav>
+
+<!-- Main Content Area -->
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- Form Switcher -->
+        <div class="form-switcher">
+            <button class="switch-btn active" data-form="login">Login</button>
+            <button class="switch-btn" data-form="register">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <div class="form-container" id="login-form">
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Continue your fitness journey</p>
+
+            <form action="{{ url_for('main.login') }}" method="POST"> <!-- since the entered password and username is checked using User.check_password() -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="input-group">
+                    <div class="input-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+
+                <div class="form-footer">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Remember me</label>
+                    </div>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span>Login</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Register Form -->
+        <div class="form-container hidden" id="register-form">
+            <h1>Create Account</h1>
+            <p class="subtitle">Start your fitness journey</p>
+
+            <form action="{{ url_for('main.register') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="input-group">
+                    <div class="input-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <input type="text" name="username" placeholder="Choose a username" required>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <input type="password" name="password" id="password" placeholder="Create password" required>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm password"
+                           required>
+                </div>
+
+                <div class="checkbox-container terms-checkbox">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy
+                        Policy</a></label>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span>Create Account</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Features Showcase -->
+    <div class="features">
+        <div class="feature">
+            <div class="feature-icon">
+                <i class="fas fa-running"></i>
+            </div>
+            <h3>Track All Activities</h3>
+            <p>Manage all your fitness activities in one place</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">
+                <i class="fas fa-medal"></i>
+            </div>
+            <h3>Unlock Achievements</h3>
+            <p>Earn rewards and badges as you reach fitness milestones</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Data Analysis</h3>
+            <p>Get detailed statistics and progress reports</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3>Community Sharing</h3>
+            <p>Share your progress and achievements with friends</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+      // Form toggling
+      $('.switch-btn').click(function() {
+        $('.switch-btn').removeClass('active');
+        $(this).addClass('active');
+
+        const formToShow = $(this).data('form');
+        $('.form-container').addClass('hidden');
+        $(`#${formToShow}-form`).removeClass('hidden');
+      });
+
+      // Password matching validation
+      $('#register-form form').submit(function(e) {
+        const password = $('#password').val();
+        const confirmPassword = $('#confirm_password').val();
+
+        if (password !== confirmPassword) {
+          e.preventDefault();
+          alert('Passwords do not match. Please try again.');
+        }
+      });
+    });
+</script>
+</body>
+</html>

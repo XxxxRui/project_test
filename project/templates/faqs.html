@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_faqs.css') }}">
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('main.home') }}" class="logo-link">
+      <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
+           alt="Wellness Tracker Logo" class="logo">
+    </a>
+    <h1>Wellness Tracker</h1>
+    <div class="nav-buttons">
+        <a href="{{ url_for('main.account') }}">
+            <button>Account</button>
+        </a>
+        <a href="{{ url_for('main.faqs') }}">
+            <button>FAQ's</button>
+        </a>
+        <a href="{{ url_for('main.history') }}">
+            <button>History</button>
+        </a>
+    </div>
+  </header>
+
+  <main class="content">
+    <h2>Frequently Asked Questions (FAQs)</h2>
+
+    <section class="faq">
+      <h3>1. What is the Wellness Tracker?</h3>
+      <p>The Wellness Tracker is a tool that helps you track your daily physical activities, including steps taken, calories burned, and more. It's designed to help you stay on top of your health and fitness goals.</p>
+    </section>
+
+    <section class="faq">
+      <h3>2. How do I upload my health data?</h3>
+      <p>You can upload your health data by going to the "Upload Data" section, where you'll be asked to enter details like the number of steps you’ve taken or the calories you’ve burnt.</p>
+    </section>
+
+    <section class="faq">
+      <h3>3. How does the tracker help me visualize my progress?</h3>
+      <p>The tracker provides various visualizations, including charts and graphs, to show your progress over time. You can view your daily, weekly, and monthly activity levels in a simple and easy-to-read format.</p>
+    </section>
+
+    <section class="faq">
+      <h3>4. Can I track my sleep patterns?</h3>
+      <p>Currently, the Wellness Tracker focuses on physical activities such as steps and calories. However, sleep tracking may be introduced in future updates.</p>
+    </section>
+
+    <section class="faq">
+      <h3>5. How secure is my data?</h3>
+      <p>Your privacy and data security are important to us. All your personal health data is stored securely, and we use encryption to protect it from unauthorized access.</p>
+    </section>
+
+    <section class="faq">
+      <h3>6. Can I share my health data with others?</h3>
+      <p>Yes! You can share your data with others by using the "Share Data" feature. This allows you to share your progress with friends or medical professionals securely.</p>
+    </section>
+
+    <section class="faq">
+      <h3>7. Can I delete my account or data?</h3>
+      <p>Yes, if you wish to delete your account or data, you can do so through the settings section. Please note that deleting your account will permanently remove all your data.</p>
+    </section>
+  </main>
+</body>
+</html>

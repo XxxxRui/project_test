@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Our Story - History</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_history.css') }}" />
+</head>
+<body>
+  <header>
+    <a href="index.html" class="logo-link">
+      <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
+           alt="Wellness Tracker Logo" class="logo">
+    </a>
+    <h1>Wellness Tracker</h1>
+    <div class="nav-buttons">
+        <a href="{{ url_for('main.account') }}">
+            <button>Account</button>
+        </a>
+        <a href="{{ url_for('main.faqs') }}">
+            <button>FAQ's</button>
+        </a>
+        <a href="{{ url_for('main.history') }}">
+            <button>History</button>
+        </a>
+    </div>
+  </header>
+
+  <main class="content">
+    <h2>Our Journey</h2>
+    <p>
+      In early 2025, while sitting under the shade at Matilda Bay across from the University of Western Australia (UWA), four computer science students — Sheikh, Rui, Dani, and Mudit — started discussing how difficult it was to track their own health without bouncing between multiple apps and devices. With a shared passion for wellness and tech, that casual riverside conversation turned into the spark behind the Wellness Tracker.
+    </p>
+
+    <p>
+      Sheikh brought the idea of syncing personal health devices like smartwatches and trackers to a single web interface. With a keen eye for design and user flow, he helped architect the layout and made sure the app felt intuitive and welcoming. Rui, the backend specialist, ensured real-time data collection and smooth integration between devices and databases. Dani, with her knack for frontend code and visuals, developed the responsive and engaging user interface that made the app shine across desktops and mobiles. Mudit, ever the innovator, focused on integrating advanced analytics and visualizations, allowing users to see trends, set goals, and gain insights from their activity.
+    </p>
+
+    <p>
+      With long nights in the Reid Library and brainstorming breaks at Kings Park, they brought together their shared talents and local inspiration to launch something bigger than just a uni project. The Wellness Tracker is a tribute to collaboration, community, and care — built right here in Perth.
+    </p>
+  </main>
+</body>
+</html>

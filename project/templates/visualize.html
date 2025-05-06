@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualize Data | Wellness Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_visualize.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('main.home') }}" class="logo-link">
+      <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
+           alt="Wellness Tracker Logo" class="logo">
+    </a>
+    <h1>Wellness Tracker</h1>
+    <div class="nav-buttons">
+        <a href="{{ url_for('main.health_data') }}">
+            <button>Health Dashboard</button>
+        </a>
+        <a href="{{ url_for('main.account') }}">
+            <button>Account</button>
+        </a>
+        <a href="{{ url_for('main.share_page') }}">
+            <button>Share</button>
+        </a>
+    </div>
+  </header>
+
+  <main class="content">
+    <h2>Your Health Analytics</h2>
+
+    <!-- Dashboard filters -->
+    <div class="filter-controls">
+      <div class="date-filter">
+        <label for="time-period">Time Period:</label>
+        <select id="time-period" onchange="updateCharts()">
+          <option value="week">Last 7 Days</option>
+          <option value="month">Last 30 Days</option>
+          <option value="year">Last 12 Months</option>
+        </select>
+      </div>
+      <div class="data-filter">
+        <label>Data to Show:</label>
+        <div class="checkbox-group">
+          <input type="checkbox" id="show-steps" checked onchange="toggleDataset('steps')">
+          <label for="show-steps">Steps</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="show-calories" checked onchange="toggleDataset('calories')">
+          <label for="show-calories">Calories</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="show-sleep" checked onchange="toggleDataset('sleep')">
+          <label for="show-sleep">Sleep</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main visualization area with multiple charts -->
+    <div class="charts-container">
+      <div class="chart-card">
+        <h3>Activity Overview</h3>
+        <div class="chart-wrapper">
+          <canvas id="activityChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-card">
+        <h3>Daily Progress</h3>
+        <div class="progress-indicators">
+          <div class="progress-item">
+            <div class="progress-title">Steps</div>
+            <div class="progress-value" id="steps-progress">0/10,000</div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="steps-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-title">Calories</div>
+            <div class="progress-value" id="calories-progress">0/500</div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="calories-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-title">Sleep</div>
+            <div class="progress-value" id="sleep-progress">0/8 hrs</div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="sleep-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly trends chart -->
+    <div class="chart-card full-width">
+      <h3>Activity Trends</h3>
+      <div class="chart-wrapper">
+        <canvas id="trendsChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Data table with sortable columns -->
+    <div class="data-table-container">
+      <h3>Your Health Data</h3>
+      <div class="table-controls">
+        <button class="table-control-btn" onclick="exportCSV()">Export Data</button>
+        <div class="table-search">
+          <input type="text" id="table-search" placeholder="Search records...">
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table id="healthDataTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Date ↕</th>
+              <th onclick="sortTable(1)">Steps ↕</th>
+              <th onclick="sortTable(2)">Calories ↕</th>
+              <th onclick="sortTable(3)">Sleep (hrs) ↕</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="healthDataBody">
+            <!-- Data rows will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      <div class="table-pagination">
+        <button id="prev-page" disabled>Previous</button>
+        <span id="page-indicator">Page 1 of 1</span>
+        <button id="next-page" disabled>Next</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Share prompt modal -->
+  <div class="share-prompt" id="share-prompt" style="display: none;">
+    <h3>Share Your Data</h3>
+    <p>Would you like to share your health insights?</p>
+    <div class="share-options">
+      <a href="{{ url_for('main.share_page') }}">
+        <button class="share-btn">Share with friends</button>
+      </a>
+      <button class="cancel-btn" onclick="closeSharePrompt()">Not now</button>
+    </div>
+  </div>
+  <script>
+    // Pass the server data to JavaScript
+    const serverData = "{{ health_data|tojson|safe }}";
+    const initialTimePeriod = "{{ time_period }}";
+    const userId = "{{ user_id }}";
+</script>
+  <script src="{{ url_for('static', filename='js/visualize.js') }}"></script>
+</body>
+</html>

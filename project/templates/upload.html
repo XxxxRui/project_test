@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Data | Wellness Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_upload.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('main.home') }}" class="logo-link">
+      <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
+           alt="Wellness Tracker Logo" class="logo">
+    </a>
+    <h1>Wellness Tracker</h1>
+    <div class="nav-buttons">
+      <a href="{{ url_for('main.health_data') }}">
+            <button>Dashboard</button>
+        </a>
+        <a href="{{ url_for('main.account') }}">
+            <button>Account</button>
+        </a>
+        <a href="{{ url_for('main.faqs') }}">
+            <button>FAQ's</button>
+        </a>
+        <a href="{{ url_for('main.history') }}">
+            <button>History</button>
+        </a>
+        <a href="{{ url_for('main.visualize') }}">
+            <button>View Analytics</button>
+        </a>
+    </div>
+  </header>
+
+  <main class="content">
+    <h2>Upload Your Health Data</h2>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('main.upload_data') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div class="form-group">
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" value="{{ today }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="steps">Steps:</label>
+            <input type="number" id="steps" name="steps" min="0" max="100000" placeholder="e.g. 8000" required>
+            <div class="input-helper">How many steps did you take today?</div>
+        </div>
+
+        <div class="form-group">
+            <label for="calories">Calories Burnt:</label>
+            <input type="number" id="calories" name="calories" min="0" max="10000" placeholder="e.g. 350" required>
+            <div class="input-helper">Estimated calories burned from exercise</div>
+        </div>
+
+        <div class="form-group">
+            <label for="sleep">Sleep (hours):</label>
+            <input type="number" id="sleep" name="sleep" min="0" max="24" step="0.1" placeholder="e.g. 7.5">
+            <div class="input-helper">How many hours did you sleep? (optional)</div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">Save Data</button>
+            <button type="button" class="import-btn" id="importDataBtn">Import from Device</button>
+        </div>
+    </form>
+
+    <!-- Device Import Modal -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Import from Device</h3>
+            
+            <div class="device-selection">
+                <div class="device" data-device="fitbit">
+                    <img src="https://img.icons8.com/color/96/000000/fitbit.png" alt="Fitbit">
+                    <span>Fitbit</span>
+                </div>
+                <div class="device" data-device="apple">
+                    <img src="https://img.icons8.com/color/96/000000/apple-watch.png" alt="Apple Watch">
+                    <span>Apple Watch</span>
+                </div>
+                <div class="device" data-device="garmin">
+                    <img src="https://img.icons8.com/color/96/000000/garmin.png" alt="Garmin">
+                    <span>Garmin</span>
+                </div>
+                <div class="device" data-device="samsung">
+                    <img src="https://img.icons8.com/color/96/000000/samsung.png" alt="Samsung Health">
+                    <span>Samsung Health</span>
+                </div>
+            </div>
+            
+            <div class="connection-status">
+                <p id="connectionMessage">Select a device to connect</p>
+                <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+            </div>
+            
+            <div class="modal-actions">
+                <button id="connectBtn" disabled>Connect</button>
+                <button id="cancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+
+        // Device import modal
+        const modal = document.getElementById('deviceModal');
+        const importBtn = document.getElementById('importDataBtn');
+        const closeBtn = document.querySelector('.close-btn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const devices = document.querySelectorAll('.device');
+        const connectBtn = document.getElementById('connectBtn');
+        const connectionMessage = document.getElementById('connectionMessage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        // Open modal
+        importBtn.addEventListener('click', function() {
+            modal.style.display = 'flex';
+        });
+
+        // Close modal
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Device selection
+        let selectedDevice = null;
+        
+        devices.forEach(device => {
+            device.addEventListener('click', function() {
+                devices.forEach(d => d.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedDevice = this.dataset.device;
+                connectBtn.disabled = false;
+            });
+        });
+
+        // Connect button
+        connectBtn.addEventListener('click', function() {
+            if (selectedDevice) {
+                // Show loading
+                loadingSpinner.style.display = 'block';
+                connectionMessage.textContent = `Connecting to ${selectedDevice}...`;
+                
+                // Simulate connection delay
+                setTimeout(function() {
+                    // Simulate data retrieval
+                    loadingSpinner.style.display = 'none';
+                    
+                    if (Math.random() > 0.2) { // 80% success chance
+                        connectionMessage.textContent = `Successfully imported data from ${selectedDevice}!`;
+                        connectionMessage.classList.add('success');
+                        
+                        // Fill form with random data
+                        const steps = Math.floor(Math.random() * 5000) + 5000;
+                        const calories = Math.floor(Math.random() * 300) + 200;
+                        const sleep = (Math.random() * 3 + 5).toFixed(1);
+                        
+                        document.getElementById('steps').value = steps;
+                        document.getElementById('calories').value = calories;
+                        document.getElementById('sleep').value = sleep;
+                        
+                        // Close modal after a delay
+                        setTimeout(function() {
+                            modal.style.display = 'none';
+                            connectionMessage.classList.remove('success');
+                        }, 2000);
+                    } else {
+                        // Failure case
+                        connectionMessage.textContent = `Failed to connect to ${selectedDevice}. Please try again.`;
+                        connectionMessage.classList.add('error');
+                        
+                        setTimeout(function() {
+                            connectionMessage.classList.remove('error');
+                            connectionMessage.textContent = 'Select a device to connect';
+                        }, 3000);
+                    }
+                }, 2000);
+            }
+        });
+        
+        // Form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            const steps = document.getElementById('steps').value;
+            const calories = document.getElementById('calories').value;
+            
+            if (!steps || !calories) {
+                event.preventDefault();
+                alert('Please enter both steps and calories burnt.');
+            }
+        });
+    });
+  </script>
+</body>
+</html>

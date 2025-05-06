@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Data Input</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_account.css') }}"/>
+</head>
+<body>
+
+<!-- Background Blur -->
+<div class="blur-bg"></div>
+
+<!-- Header restored -->
+<header>
+    <a href="{{ url_for('main.home') }}" class="logo-link">
+        <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg"
+             alt="Wellness Tracker Logo" class="logo">
+    </a>
+    <h1>Wellness Tracker</h1>
+    <div class="nav-buttons">
+        <a href="{{ url_for('main.account') }}">
+            <button>Account</button>
+        </a>
+        <a href="{{ url_for('main.faqs') }}">
+            <button>FAQ's</button>
+        </a>
+        <a href="{{ url_for('main.history') }}">
+            <button>History</button>
+        </a>
+    </div>
+</header>
+
+
+<!-- Centered Form Area -->
+<div class="form-container">
+    <h2>Enter Your Details</h2>
+    <form action="{{'health_data'}}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <label for="unique_number">Unique Number:</label>
+        <input type="text" id="unique_number" name="unique_number" placeholder="e.g. 1234567890" required>
+
+        <label for="dob">Date of Birth:</label>
+        <input type="date" id="dob" name="dob" required>
+
+        <button type="submit">See Data</button>
+    </form>
+</div>
+
+</body>
+</html>
