@@ -3,38 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health Data</title>
+    <title>Health Data Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_health_data.css') }}">
-    <script>
-// <!--        // Function to show the share prompt-->
-// <!--        function shareData() {-->
-// <!--            // Create the share prompt HTML-->
-// <!--            const sharePromptHTML = `-->
-// <!--                <div class="share-prompt">-->
-// <!--                    <h3>Share Your Data</h3>-->
-// <!--                    <p>Click a link to share your data on social media:</p>-->
-// <!--                    <a href="https://twitter.com/intent/tweet?text=Check%20out%20my%20health%20data!" target="_blank">-->
-// <!--                        <button>Share on Twitter</button>-->
-// <!--                    </a>-->
-// <!--                    <a href="https://www.facebook.com/sharer/sharer.php?u=https://yourwebsite.com/visualize.html" target="_blank">-->
-// <!--                        <button>Share on Facebook</button>-->
-// <!--                    </a>-->
-// <!--                    <button onclick="closeSharePrompt()">Close</button>-->
-// <!--                </div>-->
-// <!--            `;-->
-
-// <!--            // Append the prompt to the body-->
-// <!--            document.body.insertAdjacentHTML('beforeend', sharePromptHTML);-->
-// <!--        }-->
-
-// <!--        // Function to close the share prompt-->
-// <!--        function closeSharePrompt() {-->
-// <!--            const prompt = document.querySelector('.share-prompt');-->
-// <!--            if (prompt) {-->
-// <!--                prompt.remove();-->
-// <!--            }-->
-// <!--        }-->
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <header>
@@ -53,33 +24,296 @@
         <a href="{{ url_for('main.history') }}">
             <button>History</button>
         </a>
+        <a href="{{ url_for('main.logout') }}">
+            <button>Logout</button>
+        </a>
     </div>
   </header>
 
   <main class="content">
-    <h2>Your Health Data</h2>
+    <h2>Your Activity Dashboard</h2>
+    <p class="welcome-message">Welcome, {{ session.username }}! What would you like to do today?</p>
+
+    <div class="dashboard-summary">
+      <div class="summary-card">
+        <div class="summary-icon">
+          <img src="https://img.icons8.com/fluency/96/000000/time.png" alt="Duration">
+        </div>
+        <div class="summary-data">
+          <h3>Total Time</h3>
+          <p class="summary-value" id="total-time">Loading...</p>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="summary-icon">
+          <img src="https://img.icons8.com/fluency/96/000000/fire-element.png" alt="Calories">
+        </div>
+        <div class="summary-data">
+          <h3>Calories Burned</h3>
+          <p class="summary-value" id="total-calories">Loading...</p>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="summary-icon">
+          <img src="https://img.icons8.com/fluency/96/000000/trophy.png" alt="Workouts">
+        </div>
+        <div class="summary-data">
+          <h3>Workouts</h3>
+          <p class="summary-value" id="total-workouts">Loading...</p>
+        </div>
+      </div>
+    </div>
 
     <div class="options-row">
         <!-- Upload button -->
         <a href="{{ url_for('main.upload') }}" class="option">
             <img src="https://img.icons8.com/clouds/300/upload.png" alt="Upload Data" />
-            <p>Upload Data</p>
+            <p>Record Activity</p>
         </a>
 
         <!-- Visualize button -->
         <a href="{{ url_for('main.visualize') }}" class="option">
             <img src="https://img.icons8.com/clouds/300/combo-chart.png" alt="Visualize Data" />
-            <p>Visualize Data</p>
+            <p>View Analytics</p>
         </a>
 
-        <!-- Share button (triggers the share prompt) -->
-        <a href="{{ url_for('main.share_page') }}" class="option" >
+        <!-- Share button -->
+        <a href="{{ url_for('main.share_page') }}" class="option">
             <img src="https://img.icons8.com/clouds/300/share.png" alt="Share Data" />
-            <p>Share Data</p>
+            <p>Share Progress</p>
         </a>
+    </div>
+    
+    <div class="dashboard-charts">
+      <div class="chart-container">
+        <h3>Recent Activities</h3>
+        <canvas id="recentActivitiesChart"></canvas>
+      </div>
+      
+      <div class="chart-container">
+        <h3>Activity Distribution</h3>
+        <canvas id="activityDistributionChart"></canvas>
+      </div>
+    </div>
+    
+    <div class="quick-actions">
+      <h3>Quick Actions</h3>
+      <div class="action-buttons">
+        <a href="{{ url_for('main.upload') }}" class="action-button">
+          <img src="https://img.icons8.com/fluency/48/000000/running.png" alt="Record Exercise">
+          <span>Record Exercise</span>
+        </a>
+        
+        <a href="{{ url_for('main.visualize') }}?period=week" class="action-button">
+          <img src="https://img.icons8.com/fluency/48/000000/calendar-week.png" alt="Weekly Report">
+          <span>Weekly Report</span>
+        </a>
+        
+        <a href="{{ url_for('main.visualize') }}?period=month" class="action-button">
+          <img src="https://img.icons8.com/fluency/48/000000/calendar.png" alt="Monthly Trends">
+          <span>Monthly Trends</span>
+        </a>
+        
+        <a href="{{ url_for('main.share_page') }}" class="action-button">
+          <img src="https://img.icons8.com/fluency/48/000000/share.png" alt="Share Progress">
+          <span>Share Progress</span>
+        </a>
+      </div>
     </div>
 
   </main>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Fetch user activity data
+      fetch('/api/health_data?period=month')
+        .then(response => response.json())
+        .then(data => {
+          // Update dashboard summary
+          updateDashboardSummary(data);
+          
+          // Create charts
+          createRecentActivitiesChart(data);
+          createActivityDistributionChart(data);
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+          document.querySelectorAll('.summary-value').forEach(el => {
+            el.textContent = 'Error loading data';
+          });
+        });
+    });
+    
+    function updateDashboardSummary(data) {
+      // Calculate totals
+      let totalDuration = 0;
+      let totalCalories = 0;
+      const uniqueDates = new Set();
+      
+      data.forEach(item => {
+        totalDuration += parseInt(item.duration || 0);
+        totalCalories += parseInt(item.calories || 0);
+        uniqueDates.add(item.full_date || item.date);
+      });
+      
+      // Update summary values
+      document.getElementById('total-time').textContent = `${totalDuration} mins`;
+      document.getElementById('total-calories').textContent = `${totalCalories} kcal`;
+      document.getElementById('total-workouts').textContent = `${uniqueDates.size} sessions`;
+    }
+    
+    function createRecentActivitiesChart(data) {
+      // Sort data by date
+      data.sort((a, b) => {
+        const dateA = a.full_date || a.date;
+        const dateB = b.full_date || b.date;
+        return dateA.localeCompare(dateB);
+      });
+      
+      // Get only the most recent 7 days of data
+      const recentData = data.slice(-7);
+      
+      // Group by date
+      const groupedData = {};
+      recentData.forEach(item => {
+        const date = item.date || new Date(item.full_date).toLocaleDateString('en-US', { weekday: 'short' });
+        
+        if (!groupedData[date]) {
+          groupedData[date] = {
+            duration: 0,
+            calories: 0
+          };
+        }
+        
+        groupedData[date].duration += parseInt(item.duration || 0);
+        groupedData[date].calories += parseInt(item.calories || 0);
+      });
+      
+      const labels = Object.keys(groupedData);
+      const durationData = labels.map(date => groupedData[date].duration);
+      const caloriesData = labels.map(date => groupedData[date].calories);
+      
+      const ctx = document.getElementById('recentActivitiesChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Duration (mins)',
+              data: durationData,
+              backgroundColor: 'rgba(255, 99, 132, 0.7)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Calories',
+              data: caloriesData,
+              backgroundColor: 'rgba(54, 162, 235, 0.7)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Duration (mins)'
+              }
+            },
+            y1: {
+              beginAtZero: true,
+              position: 'right',
+              grid: {
+                drawOnChartArea: false
+              },
+              title: {
+                display: true,
+                text: 'Calories'
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    function createActivityDistributionChart(data) {
+      // Group by exercise type
+      const exerciseTypes = {};
+      
+      data.forEach(item => {
+        const type = item.exercise_type || 'Unknown';
+        
+        if (!exerciseTypes[type]) {
+          exerciseTypes[type] = 0;
+        }
+        
+        exerciseTypes[type] += parseInt(item.duration || 0);
+      });
+      
+      const labels = Object.keys(exerciseTypes);
+      const durationData = labels.map(type => exerciseTypes[type]);
+      
+      // Generate colors
+      const backgroundColors = [
+        'rgba(255, 99, 132, 0.7)',
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(255, 206, 86, 0.7)',
+        'rgba(75, 192, 192, 0.7)',
+        'rgba(153, 102, 255, 0.7)',
+        'rgba(255, 159, 64, 0.7)',
+        'rgba(199, 199, 199, 0.7)',
+        'rgba(83, 102, 255, 0.7)',
+        'rgba(40, 159, 64, 0.7)',
+        'rgba(210, 199, 199, 0.7)'
+      ];
+      
+      const ctx = document.getElementById('activityDistributionChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              data: durationData,
+              backgroundColor: backgroundColors.slice(0, labels.length),
+              borderColor: backgroundColors.map(color => color.replace('0.7', '1')).slice(0, labels.length),
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((value / total) * 100);
+                  return `${label}: ${value} mins (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>

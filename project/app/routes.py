@@ -1,15 +1,28 @@
 from flask import Blueprint, request, redirect, url_for, render_template, flash, jsonify, session
-from app.db_helper import get_db_connection
+from app.db_helper import get_db_connection, get_exercise_types, calculate_calories
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from datetime import datetime, timedelta
+from functools import wraps
 
 main = Blueprint('main', __name__)
+
+# Authentication decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash("Please login first", "error")
+            return redirect(url_for('main.home'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @main.route('/')
 def home():
     return render_template('login.html')
+
+
 
 @main.route('/register', methods=['POST'])
 def register():
@@ -51,10 +64,10 @@ def login():
     conn.close()
 
     if user and check_password_hash(user['password_hash'], password):
-        session['user_id'] = user['user_id']
+        session['user_id'] = user['id']
         session['username'] = username
         flash("Login successful!", "success")
-        return redirect(url_for('main.account'))
+        return redirect(url_for('main.health_data'))
     else:
         flash("Invalid username or password", "error")
         return redirect(url_for('main.home'))
@@ -66,72 +79,51 @@ def logout():
     return redirect(url_for('main.home'))
 
 @main.route('/account')
+@login_required
 def account():
-    if 'user_id' not in session:
-        flash("Please login first", "error")
-        return redirect(url_for('main.home'))
     return render_template('account.html')
 
 @main.route('/upload')
+@login_required
 def upload():
-    if 'user_id' not in session:
-        flash("Please login first", "error")
-        return redirect(url_for('main.home'))
-    return render_template('upload.html')
+    # Get exercise types for the dropdown
+    exercise_types = get_exercise_types()
+    return render_template('upload.html', exercise_types=exercise_types, today=datetime.now().strftime('%Y-%m-%d'))
 
 @main.route('/upload_data', methods=['POST'])
+@login_required
 def upload_data():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-    
     user_id = session['user_id']
-    steps = request.form.get('steps', type=int)
-    calories = request.form.get('calories', type=int)
-    sleep = request.form.get('sleep', type=float)
+    exercise_type_id = request.form.get('exercise_type', type=int)
+    duration = request.form.get('duration', type=int)
     date = request.form.get('date', datetime.now().strftime('%Y-%m-%d'))
     
     # Validate inputs
-    if not steps or not calories:
-        flash("Steps and calories are required", "error")
+    if not exercise_type_id or not duration:
+        flash("Exercise type and duration are required", "error")
         return redirect(url_for('main.upload'))
+    
+    # Calculate calories based on exercise type and duration
+    calories = calculate_calories(exercise_type_id, duration)
     
     conn = get_db_connection()
     
-    # Check if an entry already exists for this date
-    existing = conn.execute(
-        'SELECT * FROM health_data WHERE user_id = ? AND date = ?', 
-        (user_id, date)
-    ).fetchone()
-    
-    if existing:
-        # Update existing record
-        conn.execute(
-            '''UPDATE health_data 
-               SET steps = ?, calories_burnt = ?, sleep_hours = ?
-               WHERE user_id = ? AND date = ?''',
-            (steps, calories, sleep, user_id, date)
-        )
-        flash("Health data updated successfully!", "success")
-    else:
-        # Insert new record
-        conn.execute(
-            '''INSERT INTO health_data (user_id, date, steps, calories_burnt, sleep_hours)
-               VALUES (?, ?, ?, ?, ?)''',
-            (user_id, date, steps, calories, sleep)
-        )
-        flash("Health data added successfully!", "success")
+    # Insert the activity data
+    conn.execute(
+        '''INSERT INTO activity_data (user_id, exercise_type_id, date, duration_minutes, calories_burnt)
+           VALUES (?, ?, ?, ?, ?)''',
+        (user_id, exercise_type_id, date, duration, calories)
+    )
     
     conn.commit()
     conn.close()
     
+    flash("Activity data added successfully!", "success")
     return redirect(url_for('main.visualize'))
 
 @main.route('/visualize')
+@login_required
 def visualize():
-    if 'user_id' not in session:
-        flash("Please login first", "error")
-        return redirect(url_for('main.home'))
-    
     user_id = session['user_id']
     time_period = request.args.get('period', 'week')
     
@@ -154,26 +146,27 @@ def visualize():
     
     # Query data from database
     conn = get_db_connection()
-    health_data = conn.execute(
-        '''SELECT date, steps, calories_burnt, sleep_hours
-           FROM health_data 
-           WHERE user_id = ? AND date >= ? 
-           ORDER BY date ASC''',
+    activity_data = conn.execute(
+        '''SELECT a.date, a.duration_minutes, a.calories_burnt, e.name as exercise_type 
+           FROM activity_data a
+           JOIN exercise_types e ON a.exercise_type_id = e.id
+           WHERE a.user_id = ? AND a.date >= ? 
+           ORDER BY a.date ASC''',
         (user_id, start_date)
     ).fetchall()
     conn.close()
     
     # Format data for template
     formatted_data = []
-    for row in health_data:
+    for row in activity_data:
         date_obj = datetime.strptime(row['date'], '%Y-%m-%d')
         formatted_date = date_obj.strftime(date_format)
         formatted_data.append({
             'date': formatted_date,
             'full_date': row['date'],
-            'steps': row['steps'],
+            'duration': row['duration_minutes'],
             'calories': row['calories_burnt'],
-            'sleep': row['sleep_hours'] if row['sleep_hours'] else 0
+            'exercise_type': row['exercise_type']
         })
     
     # Pass data to template
@@ -183,10 +176,8 @@ def visualize():
                            user_id=user_id)
 
 @main.route('/api/health_data')
+@login_required
 def get_health_data():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-    
     user_id = session['user_id']
     period = request.args.get('period', 'week')
     
@@ -208,10 +199,11 @@ def get_health_data():
     # Get data from database
     conn = get_db_connection()
     data = conn.execute(
-        '''SELECT date, steps, calories_burnt, sleep_hours
-           FROM health_data
-           WHERE user_id = ? AND date >= ?
-           ORDER BY date ASC''',
+        '''SELECT a.date, a.duration_minutes, a.calories_burnt, e.name as exercise_type 
+           FROM activity_data a
+           JOIN exercise_types e ON a.exercise_type_id = e.id
+           WHERE a.user_id = ? AND a.date >= ?
+           ORDER BY a.date ASC''',
         (user_id, start_date)
     ).fetchall()
     conn.close()
@@ -224,65 +216,37 @@ def get_health_data():
         formatted_data.append({
             'date': formatted_date,
             'full_date': row['date'],
-            'steps': row['steps'],
+            'duration': row['duration_minutes'],
             'calories': row['calories_burnt'],
-            'sleep': row['sleep_hours'] if row['sleep_hours'] else 0
+            'exercise_type': row['exercise_type']
         })
     
     return jsonify(formatted_data)
 
-@main.route('/api/edit_health_data', methods=['POST'])
-def edit_health_data():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
+@main.route('/api/exercise_types')
+def get_api_exercise_types():
+    exercise_types = get_exercise_types()
+    return jsonify([dict(t) for t in exercise_types])
+
+@main.route('/api/calculate_calories')
+def api_calculate_calories():
+    exercise_type_id = request.args.get('exercise_type_id', type=int)
+    duration = request.args.get('duration', type=int)
     
-    user_id = session['user_id']
-    date = request.form.get('date')
-    steps = request.form.get('steps', type=int)
-    calories = request.form.get('calories', type=int)
-    sleep = request.form.get('sleep', type=float)
+    if not exercise_type_id or not duration:
+        return jsonify({'error': 'Missing required parameters'}), 400
     
-    # Validate inputs
-    if not date or not steps or not calories:
-        return jsonify({'error': 'Missing required fields'}), 400
-    
-    conn = get_db_connection()
-    
-    # Check if the record exists and belongs to the user
-    existing = conn.execute(
-        'SELECT * FROM health_data WHERE user_id = ? AND date = ?', 
-        (user_id, date)
-    ).fetchone()
-    
-    if not existing:
-        conn.close()
-        return jsonify({'error': 'Record not found or access denied'}), 404
-    
-    # Update the record
-    conn.execute(
-        '''UPDATE health_data 
-           SET steps = ?, calories_burnt = ?, sleep_hours = ?
-           WHERE user_id = ? AND date = ?''',
-        (steps, calories, sleep, user_id, date)
-    )
-    
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'success': True, 'message': 'Health data updated successfully'})
+    calories = calculate_calories(exercise_type_id, duration)
+    return jsonify({'calories': calories})
 
 @main.route('/share_page')
+@login_required
 def share_page():
-    if 'user_id' not in session:
-        flash("Please login first", "error")
-        return redirect(url_for('main.home'))
     return render_template('share_page.html')
 
 @main.route('/health_data', methods=['POST', 'GET'])
+@login_required
 def health_data():
-    if 'user_id' not in session:
-        flash("Please login first", "error")
-        return redirect(url_for('main.home'))
     return render_template('health_data.html')
 
 @main.route('/faqs')
@@ -294,10 +258,8 @@ def history():
     return render_template('history.html')
 
 @main.route('/api/share_data', methods=['POST'])
+@login_required
 def share_data():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-    
     user_id = session['user_id']
     shared_with = request.form.get('shared_with_id')
     content_type = request.form.get('content_type')  # 'activity', 'achievement', 'stats'
@@ -333,10 +295,8 @@ def share_data():
     return jsonify({'success': True, 'message': 'Content shared successfully'})
 
 @main.route('/api/shared_with_me')
+@login_required
 def shared_with_me():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-    
     user_id = session['user_id']
     
     conn = get_db_connection()

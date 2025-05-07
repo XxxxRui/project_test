@@ -7,20 +7,21 @@ def create_app():
                 template_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates'),
                 static_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static'))
 
-    # 配置 app
+    # Configure app
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'secretkey104')
+    app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # Session lifetime in seconds (24 hours)
     
-    # 设置 CSRF 保护
+    # Set up CSRF protection
     csrf = CSRFProtect(app)
     
-    # 确保实例文件夹存在
+    # Ensure instance folder exists
     os.makedirs(app.instance_path, exist_ok=True)
     
-    # 导入并初始化数据库
+    # Import and initialize database
     from app.db_helper import init_db
     init_db()
     
-    # 注册蓝图
+    # Register blueprints
     from app.routes import main
     app.register_blueprint(main)
 

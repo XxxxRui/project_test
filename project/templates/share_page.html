@@ -3,35 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Data</title>
+    <title>Share Data | Wellness Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/share-page-css.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <header>
-    <a href="{{url_for('main.home')}}" class="logo-link">
+    <a href="{{ url_for('main.health_data') }}" class="logo-link">
       <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
            alt="Wellness Tracker Logo" class="logo">
+      <span>Wellness Tracker</span>
     </a>
-    <h1>Wellness Tracker</h1>
     <div class="nav-buttons">
-      <a href="{{ url_for('main.home') }}">
-            <button>Log out</button>
+      <a href="{{ url_for('main.health_data') }}">
+            <button>Dashboard</button>
         </a>
-        <a href="{{ url_for('main.account') }}">
-            <button>Profile</button>
+        <a href="{{ url_for('main.upload') }}">
+            <button>Record Activity</button>
+        </a>
+        <a href="{{ url_for('main.visualize') }}">
+            <button>Analytics</button>
         </a>
         <a href="{{ url_for('main.faqs') }}">
             <button>FAQ's</button>
         </a>
-        <a href="{{ url_for('main.history') }}">
-            <button>History</button>
+        <a href="{{ url_for('main.logout') }}">
+            <button class="logout-btn">Logout</button>
         </a>
     </div>
   </header>
 
   <main class="content">
-    <h2>Share Your Data</h2>
+    <h2>Share Your Progress</h2>
     
     <div class="share-container">
       <!-- Left section for content selection -->
@@ -71,7 +74,7 @@
             
             <div class="share-item" onclick="selectItem('activity', 3)">
               <div class="item-icon">
-                <img src="../static/image/swimming.png" alt="Swimming">
+                <img src="https://cdn-icons-png.flaticon.com/512/2548/2548437.png" alt="Swimming">
               </div>
               <div class="item-details">
                 <h4>Swimming</h4>
@@ -85,17 +88,6 @@
         <div id="achievements" class="tab-content">
           <div class="scroll-container">
             <!-- Achievement items to share -->
-            <div class="share-item" onclick="selectItem('achievement', 1)">
-              <div class="item-icon achievement">
-                <img src="https://cdn-icons-png.flaticon.com/512/2583/2583344.png" alt="First Run">
-              </div>
-              <div class="item-details">
-                <h4>First Run</h4>
-                <p>Completed your first run</p>
-                <p class="item-date">April 6, 2025</p>
-              </div>
-            </div>
-            
             <div class="share-item" onclick="selectItem('achievement', 2)">
               <div class="item-icon achievement">
                 <img src="https://cdn-icons-png.flaticon.com/512/6941/6941697.png" alt="Marathon Master">
@@ -114,7 +106,7 @@
             <!-- Stats to share -->
             <div class="share-item" onclick="selectItem('stats', 'weekly')">
               <div class="item-icon stats">
-                <img src="../static/image/scheme.png" alt="Weekly Stats">
+                <img src="https://cdn-icons-png.flaticon.com/512/6295/6295417.png" alt="Weekly Stats">
               </div>
               <div class="item-details">
                 <h4>Weekly Activity Summary</h4>
@@ -365,4 +357,15 @@
     });
   </script>
 </body>
-</html>
+</html>', 1)">
+              <div class="item-icon achievement">
+                <img src="https://cdn-icons-png.flaticon.com/512/2583/2583344.png" alt="First Run">
+              </div>
+              <div class="item-details">
+                <h4>First Run</h4>
+                <p>Completed your first run</p>
+                <p class="item-date">April 6, 2025</p>
+              </div>
+            </div>
+            
+            <div class="share-item" onclick="selectItem('achievement

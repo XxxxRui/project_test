@@ -33,11 +33,27 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 header h1 {
   font-size: 24px;
   color: white;
+}
+
+header .logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+header .logo-link span {
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 10px;
 }
 
 .nav-buttons {
@@ -50,6 +66,7 @@ header h1 {
   border: none;
   color: white;
   padding: 10px 18px;
+  margin-left: 0;
   font-size: 14px;
   border-radius: 6px;
   cursor: pointer;
@@ -60,11 +77,18 @@ header h1 {
   background-color: #16a085;
 }
 
+.nav-buttons .logout-btn {
+  background-color: #333;
+}
+
+.nav-buttons .logout-btn:hover {
+  background-color: #555;
+}
+
 .logo {
   height: 50px;
   width: auto;
   border-radius: 8px;
-  margin-right: 15px;
 }
 
 .logo-link {
@@ -93,14 +117,15 @@ header h1 {
 
 .flash-message {
   padding: 12px 15px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-bottom: 10px;
+  text-align: center;
 }
 
 .flash-message.success {
-  background-color: rgba(22, 160, 133, 0.2);
-  border: 1px solid rgba(22, 160, 133, 0.5);
-  color: #16a085;
+  background-color: rgba(46, 204, 113, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  color: #2ecc71;
 }
 
 .flash-message.error {
@@ -141,7 +166,7 @@ form label {
   margin-top: 5px;
 }
 
-form input {
+form input, form select {
   width: 100%;
   padding: 12px 15px;
   border-radius: 6px;
@@ -152,10 +177,24 @@ form input {
   transition: all 0.3s ease;
 }
 
-form input:focus {
+form input:focus, form select:focus {
   outline: none;
   border-color: #ff0000;
   box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
+}
+
+form select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 15px;
+}
+
+form input[readonly] {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+  cursor: not-allowed;
 }
 
 .form-actions {
@@ -294,7 +333,7 @@ form input:focus {
 }
 
 .connection-status p.success {
-  color: #16a085;
+  color: #2ecc71;
 }
 
 .connection-status p.error {
@@ -357,9 +396,14 @@ form input:focus {
 /* Responsive design */
 @media (max-width: 768px) {
   header {
-    flex-direction: column;
-    padding: 15px;
-    gap: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .logo-link {
+    flex-basis: 100%;
+    justify-content: center;
+    margin-bottom: 10px;
   }
   
   .nav-buttons {
@@ -368,11 +412,49 @@ form input:focus {
     flex-wrap: wrap;
   }
   
+  .nav-buttons button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
   .form-actions {
     flex-direction: column;
   }
   
   .device-selection {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-buttons {
+    gap: 5px;
+  }
+  
+  .nav-buttons button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  form label {
+    font-size: 14px;
+  }
+  
+  form input, form select {
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .device {
+    padding: 10px;
+  }
+  
+  .device img {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .device span {
+    font-size: 12px;
   }
 }

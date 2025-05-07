@@ -3,57 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualize Data | Wellness Tracker</title>
+    <title>Analytics | Wellness Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_visualize.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
   <header>
-    <a href="{{ url_for('main.home') }}" class="logo-link">
+    <a href="{{ url_for('main.health_data') }}" class="logo-link">
       <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
            alt="Wellness Tracker Logo" class="logo">
+      <span>Wellness Tracker</span>
     </a>
-    <h1>Wellness Tracker</h1>
     <div class="nav-buttons">
-        <a href="{{ url_for('main.health_data') }}">
-            <button>Health Dashboard</button>
+      <a href="{{ url_for('main.health_data') }}">
+            <button>Dashboard</button>
         </a>
-        <a href="{{ url_for('main.account') }}">
-            <button>Account</button>
+        <a href="{{ url_for('main.upload') }}">
+            <button>Record Activity</button>
         </a>
         <a href="{{ url_for('main.share_page') }}">
             <button>Share</button>
+        </a>
+        <a href="{{ url_for('main.faqs') }}">
+            <button>FAQ's</button>
+        </a>
+        <a href="{{ url_for('main.logout') }}">
+            <button class="logout-btn">Logout</button>
         </a>
     </div>
   </header>
 
   <main class="content">
-    <h2>Your Health Analytics</h2>
+    <h2>Activity Analytics</h2>
+    <p class="welcome-message">Hi {{ username }}! Here's a detailed analysis of your activities.</p>
 
     <!-- Dashboard filters -->
     <div class="filter-controls">
       <div class="date-filter">
         <label for="time-period">Time Period:</label>
         <select id="time-period" onchange="updateCharts()">
-          <option value="week">Last 7 Days</option>
-          <option value="month">Last 30 Days</option>
-          <option value="year">Last 12 Months</option>
+          <option value="week" {% if time_period == 'week' %}selected{% endif %}>Last 7 Days</option>
+          <option value="month" {% if time_period == 'month' %}selected{% endif %}>Last 30 Days</option>
+          <option value="year" {% if time_period == 'year' %}selected{% endif %}>Last 12 Months</option>
         </select>
       </div>
       <div class="data-filter">
         <label>Data to Show:</label>
         <div class="checkbox-group">
-          <input type="checkbox" id="show-steps" checked onchange="toggleDataset('steps')">
-          <label for="show-steps">Steps</label>
+          <input type="checkbox" id="show-duration" checked onchange="toggleDataset('duration')">
+          <label for="show-duration">Duration</label>
         </div>
         <div class="checkbox-group">
           <input type="checkbox" id="show-calories" checked onchange="toggleDataset('calories')">
           <label for="show-calories">Calories</label>
-        </div>
-        <div class="checkbox-group">
-          <input type="checkbox" id="show-sleep" checked onchange="toggleDataset('sleep')">
-          <label for="show-sleep">Sleep</label>
         </div>
       </div>
     </div>
@@ -71,10 +74,10 @@
         <h3>Daily Progress</h3>
         <div class="progress-indicators">
           <div class="progress-item">
-            <div class="progress-title">Steps</div>
-            <div class="progress-value" id="steps-progress">0/10,000</div>
+            <div class="progress-title">Exercise Duration</div>
+            <div class="progress-value" id="duration-progress">0/60 mins</div>
             <div class="progress-bar">
-              <div class="progress-fill" id="steps-fill" style="width: 0%;"></div>
+              <div class="progress-fill" id="duration-fill" style="width: 0%;"></div>
             </div>
           </div>
           <div class="progress-item">
@@ -85,61 +88,197 @@
             </div>
           </div>
           <div class="progress-item">
-            <div class="progress-title">Sleep</div>
-            <div class="progress-value" id="sleep-progress">0/8 hrs</div>
+            <div class="progress-title">Weekly Goal</div>
+            <div class="progress-value" id="weekly-progress">0/5 workouts</div>
             <div class="progress-bar">
-              <div class="progress-fill" id="sleep-fill" style="width: 0%;"></div>
+              <div class="progress-fill" id="weekly-fill" style="width: 0%;"></div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Weekly trends chart -->
+    <!-- Activity breakdown chart -->
     <div class="chart-card full-width">
-      <h3>Activity Trends</h3>
+      <h3>Activity Distribution</h3>
       <div class="chart-wrapper">
-        <canvas id="trendsChart"></canvas>
+        <canvas id="distributionChart"></canvas>
       </div>
     </div>
 
     <!-- Data table with sortable columns -->
     <div class="data-table-container">
-      <h3>Your Health Data</h3>
+      <h3>Your Activity History</h3>
       <div class="table-controls">
         <button class="table-control-btn" onclick="exportCSV()">Export Data</button>
         <div class="table-search">
-          <input type="text" id="table-search" placeholder="Search records...">
+          <input type="text" id="table-search" placeholder="Search records..." oninput="filterTable()">
         </div>
       </div>
       <div class="table-wrapper">
-        <table id="healthDataTable">
+        <table id="activityDataTable">
           <thead>
             <tr>
               <th onclick="sortTable(0)">Date ↕</th>
-              <th onclick="sortTable(1)">Steps ↕</th>
-              <th onclick="sortTable(2)">Calories ↕</th>
-              <th onclick="sortTable(3)">Sleep (hrs) ↕</th>
+              <th onclick="sortTable(1)">Exercise Type ↕</th>
+              <th onclick="sortTable(2)">Duration (mins) ↕</th>
+              <th onclick="sortTable(3)">Calories ↕</th>
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="healthDataBody">
+          <tbody id="activityDataBody">
             <!-- Data rows will be populated by JavaScript -->
           </tbody>
         </table>
       </div>
       <div class="table-pagination">
-        <button id="prev-page" disabled>Previous</button>
+        <button id="prev-page" onclick="prevPage()" disabled>Previous</button>
         <span id="page-indicator">Page 1 of 1</span>
-        <button id="next-page" disabled>Next</button>
+        <button id="next-page" onclick="nextPage()" disabled>Next</button>
+      </div>
+    </div>
+    
+    <!-- Extra analytics section -->
+    <div class="extra-analytics">
+      <h3>Detailed Analytics</h3>
+      
+      <!-- Exercise Intensity Analysis -->
+      <div class="analytics-card">
+        <h4>Intensity Analysis</h4>
+        <div class="chart-wrapper">
+          <canvas id="intensityChart"></canvas>
+        </div>
+        <div class="analytics-description">
+          <p>This chart shows the distribution of your workouts by intensity level, calculated from duration and calories burnt.</p>
+        </div>
+      </div>
+      
+      <!-- Workout Consistency -->
+      <div class="analytics-card">
+        <h4>Workout Consistency</h4>
+        <div class="chart-wrapper">
+          <canvas id="consistencyChart"></canvas>
+        </div>
+        <div class="analytics-description">
+          <p>This heatmap displays your workout frequency and consistency patterns over time.</p>
+        </div>
+      </div>
+      
+      <!-- Exercise Comparison -->
+      <div class="analytics-card">
+        <h4>Exercise Type Comparison</h4>
+        <div class="chart-wrapper">
+          <canvas id="comparisonChart"></canvas>
+        </div>
+        <div class="analytics-description">
+          <p>Compare the efficiency of different exercise types based on calories burnt per minute.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Goals and achievements section -->
+    <div class="goals-container">
+      <h3>Goals & Achievements</h3>
+      <div class="goals-grid">
+        <div class="goal-card">
+          <div class="goal-icon">
+            <img src="https://img.icons8.com/fluency/96/000000/goal.png" alt="Weekly Goal">
+          </div>
+          <div class="goal-info">
+            <h4>Weekly Target</h4>
+            <div class="goal-progress">
+              <div class="goal-bar">
+                <div class="goal-fill" id="weekly-goal-fill" style="width: 60%;"></div>
+              </div>
+              <div class="goal-value">3/5 workouts</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="goal-card">
+          <div class="goal-icon">
+            <img src="https://img.icons8.com/fluency/96/000000/fire-element.png" alt="Calorie Goal">
+          </div>
+          <div class="goal-info">
+            <h4>Calorie Target</h4>
+            <div class="goal-progress">
+              <div class="goal-bar">
+                <div class="goal-fill" id="calorie-goal-fill" style="width: 75%;"></div>
+              </div>
+              <div class="goal-value">1875/2500 kcal</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="goal-card">
+          <div class="goal-icon">
+            <img src="https://img.icons8.com/fluency/96/000000/trophy.png" alt="Achievement">
+          </div>
+          <div class="goal-info">
+            <h4>Recent Achievement</h4>
+            <p>Consistency Champion: 5 workouts in a row!</p>
+          </div>
+        </div>
+        
+        <div class="goal-card">
+          <div class="goal-icon">
+            <img src="https://img.icons8.com/fluency/96/000000/prize.png" alt="Next Milestone">
+          </div>
+          <div class="goal-info">
+            <h4>Next Milestone</h4>
+            <p>Marathon Master: 42km total running distance</p>
+            <div class="goal-progress">
+              <div class="goal-bar">
+                <div class="goal-fill" style="width: 85%;"></div>
+              </div>
+              <div class="goal-value">35.7/42 km</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recommendations section -->
+    <div class="recommendations-container">
+      <h3>Personal Recommendations</h3>
+      <div class="recommendations-grid">
+        <div class="recommendation-card">
+          <div class="recommendation-icon">
+            <img src="https://img.icons8.com/fluency/96/000000/idea.png" alt="Suggestion">
+          </div>
+          <div class="recommendation-content">
+            <h4>Workout Suggestion</h4>
+            <p>Your running performance is improving! Try increasing your distance by 10% in your next run.</p>
+          </div>
+        </div>
+        
+        <div class="recommendation-card">
+          <div class="recommendation-icon">
+            <img src="https://img.icons8.com/fluency/96/000000/calendar.png" alt="Schedule">
+          </div>
+          <div class="recommendation-content">
+            <h4>Optimal Schedule</h4>
+            <p>Based on your data, your performance is best in the morning. Try scheduling more workouts before noon.</p>
+          </div>
+        </div>
+        
+        <div class="recommendation-card">
+          <div class="recommendation-icon">
+            <img src="https://img.icons8.com/fluency/96/000000/handshake.png" alt="Balanced">
+          </div>
+          <div class="recommendation-content">
+            <h4>Balance Suggestion</h4>
+            <p>You're focusing mostly on cardio. Consider adding 1-2 strength training sessions per week for better results.</p>
+          </div>
+        </div>
       </div>
     </div>
   </main>
 
   <!-- Share prompt modal -->
   <div class="share-prompt" id="share-prompt" style="display: none;">
-    <h3>Share Your Data</h3>
-    <p>Would you like to share your health insights?</p>
+    <h3>Share Your Activity Data</h3>
+    <p>Would you like to share your progress with friends?</p>
     <div class="share-options">
       <a href="{{ url_for('main.share_page') }}">
         <button class="share-btn">Share with friends</button>
@@ -147,12 +286,709 @@
       <button class="cancel-btn" onclick="closeSharePrompt()">Not now</button>
     </div>
   </div>
+
   <script>
     // Pass the server data to JavaScript
-    const serverData = "{{ health_data|tojson|safe }}";
+    const serverData = {{ health_data|safe }};
     const initialTimePeriod = "{{ time_period }}";
     const userId = "{{ user_id }}";
-</script>
-  <script src="{{ url_for('static', filename='js/visualize.js') }}"></script>
+    
+    // Charts variables
+    let activityChart = null;
+    let distributionChart = null;
+    let intensityChart = null;
+    let consistencyChart = null;
+    let comparisonChart = null;
+    
+    // Table variables
+    let currentPage = 1;
+    const rowsPerPage = 10;
+    let tableData = [];
+    let filteredData = [];
+    let sortColumn = 0;
+    let sortDirection = 'desc';
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse data from server
+        parseServerData();
+        
+        // Create the initial charts
+        createActivityChart();
+        createDistributionChart();
+        createExtraCharts();
+        
+        // Populate the table
+        populateTable();
+        
+        // Update progress bars
+        updateProgressBars();
+        
+        // Show share prompt with 30% chance after 5 seconds
+        setTimeout(function() {
+            if (Math.random() < 0.3) {
+                document.getElementById('share-prompt').style.display = 'flex';
+            }
+        }, 5000);
+    });
+    
+    function parseServerData() {
+        if (serverData && serverData.length > 0) {
+            // Parse JSON if it's a string
+            if (typeof serverData === 'string') {
+                tableData = JSON.parse(serverData);
+            } else {
+                tableData = serverData;
+            }
+            filteredData = [...tableData];
+        } else {
+            // Demo data if no server data
+            tableData = generateDemoData();
+            filteredData = [...tableData];
+        }
+    }
+    
+    function createActivityChart() {
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (activityChart) {
+            activityChart.destroy();
+        }
+        
+        // Group data by date
+        const groupedData = {};
+        filteredData.forEach(item => {
+            if (!groupedData[item.date]) {
+                groupedData[item.date] = {
+                    duration: 0,
+                    calories: 0
+                };
+            }
+            groupedData[item.date].duration += parseInt(item.duration);
+            groupedData[item.date].calories += parseInt(item.calories);
+        });
+        
+        // Prepare data for chart
+        const labels = Object.keys(groupedData);
+        const durationData = Object.values(groupedData).map(item => item.duration);
+        const caloriesData = Object.values(groupedData).map(item => item.calories);
+        
+        // Create chart
+        activityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Duration (mins)',
+                        data: durationData,
+                        borderColor: '#ff0000',
+                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Calories',
+                        data: caloriesData,
+                        borderColor: '#16a085',
+                        backgroundColor: 'rgba(22, 160, 133, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Duration (mins)'
+                        }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Calories'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function createDistributionChart() {
+        const ctx = document.getElementById('distributionChart').getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (distributionChart) {
+            distributionChart.destroy();
+        }
+        
+        // Group data by exercise type
+        const groupedData = {};
+        filteredData.forEach(item => {
+            if (!groupedData[item.exercise_type]) {
+                groupedData[item.exercise_type] = {
+                    duration: 0,
+                    calories: 0,
+                    count: 0
+                };
+            }
+            groupedData[item.exercise_type].duration += parseInt(item.duration);
+            groupedData[item.exercise_type].calories += parseInt(item.calories);
+            groupedData[item.exercise_type].count += 1;
+        });
+        
+        // Prepare data for chart
+        const labels = Object.keys(groupedData);
+        const durationData = labels.map(type => groupedData[type].duration);
+        const caloriesData = labels.map(type => groupedData[type].calories);
+        const countData = labels.map(type => groupedData[type].count);
+        
+        // Color palette
+        const backgroundColors = [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(199, 199, 199, 0.7)',
+            'rgba(83, 102, 255, 0.7)',
+            'rgba(40, 159, 64, 0.7)',
+            'rgba(210, 199, 199, 0.7)'
+        ];
+        
+        // Create chart
+        distributionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Total Duration (mins)',
+                        data: durationData,
+                        backgroundColor: backgroundColors.map(color => color.replace('0.7', '0.8')),
+                        borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const index = context.dataIndex;
+                                const label = context.label;
+                                return [
+                                    `Calories: ${caloriesData[index]}`,
+                                    `Workouts: ${countData[index]}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Total Duration (mins)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function createExtraCharts() {
+        // Create intensity chart
+        const intensityCtx = document.getElementById('intensityChart').getContext('2d');
+        
+        if (intensityChart) {
+            intensityChart.destroy();
+        }
+        
+        // Calculate intensity levels
+        const intensityLevels = {
+            'Low': 0,
+            'Moderate': 0,
+            'High': 0,
+            'Very High': 0
+        };
+        
+        filteredData.forEach(item => {
+            const duration = parseInt(item.duration);
+            const calories = parseInt(item.calories);
+            const calsPerMinute = calories / duration;
+            
+            if (calsPerMinute < 5) {
+                intensityLevels['Low'] += duration;
+            } else if (calsPerMinute < 8) {
+                intensityLevels['Moderate'] += duration;
+            } else if (calsPerMinute < 12) {
+                intensityLevels['High'] += duration;
+            } else {
+                intensityLevels['Very High'] += duration;
+            }
+        });
+        
+        intensityChart = new Chart(intensityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(intensityLevels),
+                datasets: [{
+                    data: Object.values(intensityLevels),
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 159, 64, 0.8)',
+                        'rgba(255, 99, 132, 0.8)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        // Create consistency chart (simplified heatmap)
+        const consistencyCtx = document.getElementById('consistencyChart').getContext('2d');
+        
+        if (consistencyChart) {
+            consistencyChart.destroy();
+        }
+        
+        // Group by weekday
+        const weekdayData = {
+            'Mon': 0,
+            'Tue': 0,
+            'Wed': 0,
+            'Thu': 0,
+            'Fri': 0,
+            'Sat': 0,
+            'Sun': 0
+        };
+        
+        filteredData.forEach(item => {
+            const date = new Date(item.full_date);
+            const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+            weekdayData[weekday] += 1;
+        });
+        
+        consistencyChart = new Chart(consistencyCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(weekdayData),
+                datasets: [{
+                    label: 'Workout Frequency',
+                    data: Object.values(weekdayData),
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Workouts'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Create comparison chart
+        const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+        
+        if (comparisonChart) {
+            comparisonChart.destroy();
+        }
+        
+        // Calculate calories per minute by exercise type
+        const efficiencyData = {};
+        
+        filteredData.forEach(item => {
+            const type = item.exercise_type;
+            if (!efficiencyData[type]) {
+                efficiencyData[type] = {
+                    totalCalories: 0,
+                    totalDuration: 0
+                };
+            }
+            
+            efficiencyData[type].totalCalories += parseInt(item.calories);
+            efficiencyData[type].totalDuration += parseInt(item.duration);
+        });
+        
+        const efficiencyLabels = Object.keys(efficiencyData);
+        const efficiencyValues = efficiencyLabels.map(type => {
+            const data = efficiencyData[type];
+            return data.totalCalories / data.totalDuration;
+        });
+        
+        comparisonChart = new Chart(comparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: efficiencyLabels,
+                datasets: [{
+                    label: 'Calories per Minute',
+                    data: efficiencyValues,
+                    backgroundColor: 'rgba(153, 102, 255, 0.8)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Calories per Minute'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function populateTable() {
+        const tableBody = document.getElementById('activityDataBody');
+        tableBody.innerHTML = '';
+        
+        // Calculate pagination
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const paginatedData = filteredData.slice(startIndex, endIndex);
+        
+        // Update pagination controls
+        document.getElementById('page-indicator').textContent = `Page ${currentPage} of ${Math.ceil(filteredData.length / rowsPerPage) || 1}`;
+        document.getElementById('prev-page').disabled = currentPage === 1;
+        document.getElementById('next-page').disabled = currentPage >= Math.ceil(filteredData.length / rowsPerPage);
+        
+        // Add rows to table
+        paginatedData.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Date cell
+            const dateCell = document.createElement('td');
+            dateCell.textContent = item.full_date || item.date;
+            row.appendChild(dateCell);
+            
+            // Exercise type cell
+            const typeCell = document.createElement('td');
+            typeCell.textContent = item.exercise_type || "Unknown";
+            row.appendChild(typeCell);
+            
+            // Duration cell
+            const durationCell = document.createElement('td');
+            durationCell.textContent = item.duration;
+            row.appendChild(durationCell);
+            
+            // Calories cell
+            const caloriesCell = document.createElement('td');
+            caloriesCell.textContent = item.calories;
+            row.appendChild(caloriesCell);
+            
+            // Actions cell
+            const actionsCell = document.createElement('td');
+            
+            // Share button
+            const shareButton = document.createElement('button');
+            shareButton.className = 'action-btn share-btn';
+            shareButton.textContent = 'Share';
+            shareButton.onclick = function() { shareActivity(item); };
+            actionsCell.appendChild(shareButton);
+            
+            row.appendChild(actionsCell);
+            
+            tableBody.appendChild(row);
+        });
+    }
+    
+    function updateProgressBars() {
+        // Calculate progress values
+        let totalDuration = 0;
+        let totalCalories = 0;
+        let workoutCount = 0;
+        
+        // Group by date to count unique workout days
+        const workoutDays = new Set();
+        
+        filteredData.forEach(item => {
+            totalDuration += parseInt(item.duration);
+            totalCalories += parseInt(item.calories);
+            workoutDays.add(item.full_date || item.date);
+        });
+        
+        workoutCount = workoutDays.size;
+        
+        // Update duration progress
+        const durationGoal = 300; // minutes per week
+        const durationPercent = Math.min(Math.round((totalDuration / durationGoal) * 100), 100);
+        document.getElementById('duration-progress').textContent = `${totalDuration}/${durationGoal} mins`;
+        document.getElementById('duration-fill').style.width = `${durationPercent}%`;
+        
+        // Update calories progress
+        const caloriesGoal = 2500; // calories per week
+        const caloriesPercent = Math.min(Math.round((totalCalories / caloriesGoal) * 100), 100);
+        document.getElementById('calories-progress').textContent = `${totalCalories}/${caloriesGoal}`;
+        document.getElementById('calories-fill').style.width = `${caloriesPercent}%`;
+        
+        // Update weekly workout progress
+        const workoutGoal = 5; // workouts per week
+        const workoutPercent = Math.min(Math.round((workoutCount / workoutGoal) * 100), 100);
+        document.getElementById('weekly-progress').textContent = `${workoutCount}/${workoutGoal} workouts`;
+        document.getElementById('weekly-fill').style.width = `${workoutPercent}%`;
+        
+        // Update goal cards if they exist
+        if (document.getElementById('weekly-goal-fill')) {
+            document.getElementById('weekly-goal-fill').style.width = `${workoutPercent}%`;
+        }
+        
+        if (document.getElementById('calorie-goal-fill')) {
+            document.getElementById('calorie-goal-fill').style.width = `${caloriesPercent}%`;
+        }
+    }
+    
+    function updateCharts() {
+        // When time period changes, fetch new data from server
+        const newPeriod = document.getElementById('time-period').value;
+        
+        if (userId) {
+            // Show loading state
+            document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                wrapper.classList.add('loading');
+            });
+            
+            // Make AJAX request to get data for the new time period
+            fetch(`/api/health_data?period=${newPeriod}`)
+                .then(response => response.json())
+                .then(data => {
+                    tableData = data;
+                    filteredData = [...tableData];
+                    createActivityChart();
+                    createDistributionChart();
+                    createExtraCharts();
+                    populateTable();
+                    updateProgressBars();
+                    
+                    // Remove loading state
+                    document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                        wrapper.classList.remove('loading');
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    
+                    // Remove loading state
+                    document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                        wrapper.classList.remove('loading');
+                    });
+                    
+                    // Show error message
+                    alert('Failed to fetch data. Please try again later.');
+                });
+        } else {
+            // No user ID available, just use demo data
+            createActivityChart();
+            createDistributionChart();
+            createExtraCharts();
+        }
+    }
+    
+    function toggleDataset(datasetName) {
+        const isVisible = document.getElementById(`show-${datasetName}`).checked;
+        
+        if (activityChart) {
+            activityChart.data.datasets.forEach(dataset => {
+                if (dataset.label.toLowerCase().includes(datasetName)) {
+                    dataset.hidden = !isVisible;
+                }
+            });
+            activityChart.update();
+        }
+        
+        if (distributionChart) {
+            distributionChart.data.datasets.forEach(dataset => {
+                if (dataset.label.toLowerCase().includes(datasetName)) {
+                    dataset.hidden = !isVisible;
+                }
+            });
+            distributionChart.update();
+        }
+    }
+    
+    function sortTable(columnIndex) {
+        if (sortColumn === columnIndex) {
+            // Toggle sort direction
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            // New column, default to descending
+            sortColumn = columnIndex;
+            sortDirection = 'desc';
+        }
+        
+        // Sort the data
+        filteredData.sort((a, b) => {
+            let valA, valB;
+            
+            switch (columnIndex) {
+                case 0: // Date
+                    valA = a.full_date || a.date;
+                    valB = b.full_date || b.date;
+                    break;
+                case 1: // Exercise Type
+                    valA = a.exercise_type || '';
+                    valB = b.exercise_type || '';
+                    break;
+                case 2: // Duration
+                    valA = parseInt(a.duration);
+                    valB = parseInt(b.duration);
+                    break;
+                case 3: // Calories
+                    valA = parseInt(a.calories);
+                    valB = parseInt(b.calories);
+                    break;
+                default:
+                    return 0;
+            }
+            
+            if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        // Reset pagination to first page
+        currentPage = 1;
+        
+        // Update table
+        populateTable();
+    }
+    
+    function filterTable() {
+        const searchTerm = document.getElementById('table-search').value.toLowerCase();
+        
+        if (searchTerm.trim() === '') {
+            filteredData = [...tableData];
+        } else {
+            filteredData = tableData.filter(item => {
+                return (
+                    (item.full_date && item.full_date.toLowerCase().includes(searchTerm)) ||
+                    (item.date && item.date.toLowerCase().includes(searchTerm)) ||
+                    (item.exercise_type && item.exercise_type.toLowerCase().includes(searchTerm)) ||
+                    String(item.duration).includes(searchTerm) ||
+                    String(item.calories).includes(searchTerm)
+                );
+            });
+        }
+        
+        // Reset to first page
+        currentPage = 1;
+        
+        // Update table and charts
+        populateTable();
+        createActivityChart();
+        createDistributionChart();
+        createExtraCharts();
+        updateProgressBars();
+    }
+    
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            populateTable();
+        }
+    }
+    
+    function nextPage() {
+        if (currentPage < Math.ceil(filteredData.length / rowsPerPage)) {
+            currentPage++;
+            populateTable();
+        }
+    }
+    
+    function exportCSV() {
+        // Create CSV content
+        let csv = 'Date,Exercise Type,Duration (mins),Calories\n';
+        
+        filteredData.forEach(item => {
+            csv += `${item.full_date || item.date},${item.exercise_type || 'Unknown'},${item.duration},${item.calories}\n`;
+        });
+        
+        // Create download link
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'activity_data.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+    
+    function shareActivity(activity) {
+        // Redirect to share page with activity data
+        const activityId = activity.id || '1';
+        const date = activity.full_date || activity.date;
+        window.location.href = `{{ url_for('main.share_page') }}?content_type=activity&content_id=${activityId}&date=${date}`;
+    }
+    
+    function closeSharePrompt() {
+        document.getElementById('share-prompt').style.display = 'none';
+    }
+    
+    function generateDemoData() {
+        // Demo data for development/testing
+        const demoData = [];
+        const exercises = ['Running', 'Walking', 'Cycling', 'Swimming', 'Hiking', 'Weight Training'];
+        const today = new Date();
+        
+        for (let i = 0; i < 14; i++) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            
+            const exerciseType = exercises[Math.floor(Math.random() * exercises.length)];
+            const duration = Math.floor(Math.random() * 60) + 15; // 15-75 minutes
+            const calories = Math.floor(duration * (Math.random() * 5 + 5)); // 5-10 calories per minute
+            
+            demoData.push({
+                date: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                full_date: dateStr,
+                exercise_type: exerciseType,
+                duration: duration,
+                calories: calories
+            });
+        }
+        
+        return demoData;
+    }
+  </script>
 </body>
 </html>

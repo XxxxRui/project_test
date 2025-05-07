@@ -3,38 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Data | Wellness Tracker</title>
+    <title>Record Activity | Wellness Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_upload.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
   <header>
-    <a href="{{ url_for('main.home') }}" class="logo-link">
+    <a href="{{ url_for('main.health_data') }}" class="logo-link">
       <img src="https://static.vecteezy.com/system/resources/previews/013/547/909/non_2x/smartwatch-logo-design-watch-combine-with-bulb-logo-design-modern-concept-vector.jpg" 
            alt="Wellness Tracker Logo" class="logo">
+      <span>Wellness Tracker</span>
     </a>
-    <h1>Wellness Tracker</h1>
     <div class="nav-buttons">
       <a href="{{ url_for('main.health_data') }}">
             <button>Dashboard</button>
         </a>
-        <a href="{{ url_for('main.account') }}">
-            <button>Account</button>
+        <a href="{{ url_for('main.visualize') }}">
+            <button>Analytics</button>
+        </a>
+        <a href="{{ url_for('main.share_page') }}">
+            <button>Share</button>
         </a>
         <a href="{{ url_for('main.faqs') }}">
             <button>FAQ's</button>
         </a>
-        <a href="{{ url_for('main.history') }}">
-            <button>History</button>
-        </a>
-        <a href="{{ url_for('main.visualize') }}">
-            <button>View Analytics</button>
+        <a href="{{ url_for('main.logout') }}">
+            <button class="logout-btn">Logout</button>
         </a>
     </div>
   </header>
 
   <main class="content">
-    <h2>Upload Your Health Data</h2>
+    <h2>Record Your Activity</h2>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -56,25 +56,30 @@
         </div>
 
         <div class="form-group">
-            <label for="steps">Steps:</label>
-            <input type="number" id="steps" name="steps" min="0" max="100000" placeholder="e.g. 8000" required>
-            <div class="input-helper">How many steps did you take today?</div>
+            <label for="exercise_type">Exercise Type:</label>
+            <select id="exercise_type" name="exercise_type" required onchange="updateCalories()">
+                <option value="" disabled selected>Select an exercise</option>
+                {% for exercise in exercise_types %}
+                <option value="{{ exercise.id }}" data-rate="{{ exercise.calories_per_minute }}">{{ exercise.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="input-helper">What type of exercise did you do?</div>
+        </div>
+
+        <div class="form-group">
+            <label for="duration">Duration (minutes):</label>
+            <input type="number" id="duration" name="duration" min="1" max="999" placeholder="e.g. 30" required onchange="updateCalories()" oninput="updateCalories()">
+            <div class="input-helper">How long did you exercise?</div>
         </div>
 
         <div class="form-group">
             <label for="calories">Calories Burnt:</label>
-            <input type="number" id="calories" name="calories" min="0" max="10000" placeholder="e.g. 350" required>
-            <div class="input-helper">Estimated calories burned from exercise</div>
-        </div>
-
-        <div class="form-group">
-            <label for="sleep">Sleep (hours):</label>
-            <input type="number" id="sleep" name="sleep" min="0" max="24" step="0.1" placeholder="e.g. 7.5">
-            <div class="input-helper">How many hours did you sleep? (optional)</div>
+            <input type="number" id="calories" name="calories" min="0" max="10000" placeholder="Auto-calculated" readonly>
+            <div class="input-helper">Automatically calculated from exercise type and duration</div>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="submit-btn">Save Data</button>
+            <button type="submit" class="submit-btn">Save Activity</button>
             <button type="button" class="import-btn" id="importDataBtn">Import from Device</button>
         </div>
     </form>
@@ -182,14 +187,17 @@
                         connectionMessage.textContent = `Successfully imported data from ${selectedDevice}!`;
                         connectionMessage.classList.add('success');
                         
-                        // Fill form with random data
-                        const steps = Math.floor(Math.random() * 5000) + 5000;
-                        const calories = Math.floor(Math.random() * 300) + 200;
-                        const sleep = (Math.random() * 3 + 5).toFixed(1);
+                        // Get random exercise type
+                        const exerciseSelect = document.getElementById('exercise_type');
+                        const randomExerciseIndex = Math.floor(Math.random() * (exerciseSelect.options.length - 1)) + 1;
+                        exerciseSelect.selectedIndex = randomExerciseIndex;
                         
-                        document.getElementById('steps').value = steps;
-                        document.getElementById('calories').value = calories;
-                        document.getElementById('sleep').value = sleep;
+                        // Fill form with random data
+                        const duration = Math.floor(Math.random() * 50) + 20; // 20-70 minutes
+                        document.getElementById('duration').value = duration;
+                        
+                        // Calculate calories
+                        updateCalories();
                         
                         // Close modal after a delay
                         setTimeout(function() {
@@ -213,15 +221,46 @@
         // Form validation
         const form = document.querySelector('form');
         form.addEventListener('submit', function(event) {
-            const steps = document.getElementById('steps').value;
-            const calories = document.getElementById('calories').value;
+            const exerciseType = document.getElementById('exercise_type').value;
+            const duration = document.getElementById('duration').value;
             
-            if (!steps || !calories) {
+            if (!exerciseType || !duration) {
                 event.preventDefault();
-                alert('Please enter both steps and calories burnt.');
+                alert('Please select an exercise type and enter duration.');
             }
         });
     });
-  </script>
-</body>
-</html>
+    
+    // Function to update calories based on exercise type and duration
+    function updateCalories() {
+        const exerciseSelect = document.getElementById('exercise_type');
+        const duration = document.getElementById('duration').value;
+        const caloriesField = document.getElementById('calories');
+        
+        if (exerciseSelect.selectedIndex > 0 && duration > 0) {
+            const selectedOption = exerciseSelect.options[exerciseSelect.selectedIndex];
+            const caloriesPerMinute = parseFloat(selectedOption.dataset.rate);
+            const totalCalories = Math.round(caloriesPerMinute * duration);
+            
+            caloriesField.value = totalCalories;
+        } else {
+            caloriesField.value = '';
+        }
+    }
+    
+    // Alternative method using AJAX for server-side calculation
+    function updateCaloriesFromServer() {
+        const exerciseTypeId = document.getElementById('exercise_type').value;
+        const duration = document.getElementById('duration').value;
+        
+        if (exerciseTypeId && duration > 0) {
+            fetch(`/api/calculate_calories?exercise_type_id=${exerciseTypeId}&duration=${duration}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('calories').value = data.calories;
+                })
+                .catch(error => {
+                    console.error('Error calculating calories:', error);
+                });
+        }
+    }
